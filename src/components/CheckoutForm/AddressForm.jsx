@@ -26,12 +26,28 @@ const AddressForm = ({ checkoutToken }) => {
         setShippingSubDivision(Object.keys(subdivisions)[0])
     }
 
+    const fetchShippingOptions = async (checkoutTokenId, country, region = null) => {
+        const options = await commerce.checkout.getShippingOptions(checkoutTokenId, { country, region })
+
+        setShippingOptions(options);
+        setShippingOption(options[0].id);
+    }
+
     const countries = Object.entries(shippingCountries).map(([code, name]) => ({ id: code, label: name }));
-    console.log(countries)
+    const subdivisions = Object.entries(shippingSubDivisions).map(([code, name]) => ({ id: code, label: name }));
+    const options = shippingOptions.map((sO) => ({ id: sO.id, label: `${sO.description} - (${sO.price.formatted_with_symbol})` }))
 
     useEffect(() => {
         fetchShippingCountries(checkoutToken.id)
-    })
+    }, [])
+
+    useEffect(() => {
+        if (shippingCountry) fetchSubdivisions(shippingCountry)
+    }, [shippingCountry]) //when shipping country changes then I call this useEffect
+
+    useEffect(() => {
+        if (shippingSubDivision) fetchShippingOptions(checkoutToken.id, shippingCountry, shippingSubDivision)
+    }, [shippingSubDivision])
 
     return (
         <>
@@ -55,22 +71,26 @@ const AddressForm = ({ checkoutToken }) => {
                                 ))}
                             </Select>
                         </Grid>
-                        {/* <Grid item xs={12} sm={6}>
+                        <Grid item xs={12} sm={6}>
                             <InputLabel>Shipping subdivision</InputLabel>
-                            <Select value={ } fullWidth onChange={ }>
-                                <MenuItem key={ } value={ }>
-                                    Select me
-                                </MenuItem>
+                            <Select value={shippingSubDivision} fullWidth onChange={(e) => setShippingSubDivision(e.target.value)}>
+                                {subdivisions.map((subdivision) => (
+                                    <MenuItem key={subdivision.id} value={subdivision.id}>
+                                        {subdivision.label}
+                                    </MenuItem>
+                                ))}
                             </Select>
                         </Grid>
                         <Grid item xs={12} sm={6}>
                             <InputLabel>Shipping options</InputLabel>
-                            <Select value={ } fullWidth onChange={ }>
-                                <MenuItem key={ } value={ }>
-                                    Select me
-                                </MenuItem>
+                            <Select value={shippingOption} fullWidth onChange={(e) => setShippingOption(e.target.value)}>
+                                {options.map((sO) => (
+                                    <MenuItem key={sO.id} value={sO.id}>
+                                        {sO.label}
+                                    </MenuItem>
+                                ))}
                             </Select>
-                        </Grid> */}
+                        </Grid>
                     </Grid>
                 </form>
             </FormProvider>
